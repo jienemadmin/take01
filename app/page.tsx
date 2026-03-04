@@ -1,13 +1,26 @@
-export default function Home() {
-  return (
-    <main style={{ padding: 40, fontFamily: "system-ui" }}>
-      <h1>MemberPass MVP</h1>
-      <p>Deployment Success 🚀</p>
+import { getServerSession } from "next-auth";
 
-      <ul>
-        <li><a href="/register">회원가입</a></li>
-        <li><a href="/login">로그인</a></li>
-      </ul>
+export default async function Home() {
+
+  const session = await getServerSession();
+
+  return (
+    <main style={{padding:40}}>
+      <h1>MemberPass MVP</h1>
+
+      {session ? (
+        <>
+          <p>로그인됨: {session.user?.email}</p>
+          <a href="/me">내정보</a>
+        </>
+      ) : (
+        <>
+          <a href="/register">회원가입</a>
+          <br/>
+          <a href="/login">로그인</a>
+        </>
+      )}
+
     </main>
   );
 }
