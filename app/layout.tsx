@@ -1,16 +1,12 @@
-export const metadata = {
-  title: "MemberPass MVP",
-  description: "MemberPass MVP",
-};
+import "./globals.css";
+import { Providers } from "./providers";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
