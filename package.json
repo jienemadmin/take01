@@ -27,7 +27,7 @@
     "jsbarcode": "^3.11.6"
   },
   "devDependencies": {
-    "@types/mapbox__point-geometry": "^0.1.0"
+    "@types/mapbox__point-geometry": "^0.1.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.10",
     "@types/react": "^18.3.3",
