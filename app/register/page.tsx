@@ -10,20 +10,20 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
-    });
+const res = await fetch("/api/auth/register", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password, name: "테스트", gender: "Other" }), // name/gender도 보내기
+});
 
-    const data = await res.json().catch(() => ({}));
+const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      alert(data?.error || "회원가입 실패");
-      return;
-    }
+if (!res.ok) {
+  alert(data.error || `회원가입 실패 (${res.status})`);
+  return;
+}
 
-    alert("회원가입 완료");
+alert("회원가입 완료");
   }
 
   return (
