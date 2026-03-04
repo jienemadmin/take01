@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
+    "@next-auth/prisma-adapter": "^1.0.7",
     "bcryptjs": "^2.4.3",
     "embla-carousel-react": "^8.1.6",
     "mapbox-gl": "^3.4.0",
