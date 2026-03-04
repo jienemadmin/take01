@@ -13,7 +13,7 @@ export default function RegisterPage() {
 const res = await fetch("/api/auth/register", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email, password, name: "테스트", gender: "Other" }), // name/gender도 보내기
+  body: JSON.stringify({ email, password, name, gender: "Other" })
 });
 
 const data = await res.json().catch(() => ({}));
