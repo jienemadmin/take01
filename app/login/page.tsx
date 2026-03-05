@@ -1,8 +1,14 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+
+function mapNextAuthError(err?: string | null) {
+  if (!err) return null;
+  if (err === "CredentialsSignin") return "로그인 실패: 이메일/비밀번호를 확인하세요.";
+  return "로그인 실패: 다시 시도해주세요.";
+}
 
 function LoginInner() {
   const sp = useSearchParams();
@@ -13,6 +19,13 @@ function LoginInner() {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // ✅ 혹시 URL에 ?error= 가 붙는 케이스도 표시
+  useEffect(() => {
+    const e = sp.get("error");
+    const msg = mapNextAuthError(e);
+    if (msg) setErr(msg);
+  }, [sp]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,19 +40,23 @@ function LoginInner() {
         callbackUrl,
       });
 
-      // ✅ 네 케이스 핵심: 429면 "시도 초과" 문구 띄우기
+      // ✅ 디버그 원하면 잠깐 켜서 res 확인
+      // console.log("signIn res:", res);
+
+      // ✅ 429 (rate limit)
       if (res?.status === 429) {
         setErr("로그인 시도 횟수를 초과했어요. 잠시 후 다시 시도해주세요.");
         return;
       }
 
-      // 일반 로그인 실패 (비번 틀림 등)
-      if (!res || res.error) {
-        setErr("로그인 실패: 이메일/비밀번호를 확인하세요.");
+      // ✅ 401/에러 (비번 틀림 등)
+      if (!res || res.error || res.status === 401) {
+        // NextAuth에서 보통 res.error가 "CredentialsSignin"으로 옴
+        setErr(mapNextAuthError(res?.error) ?? "로그인 실패: 이메일/비밀번호를 확인하세요.");
         return;
       }
 
-      // redirect: false라서 수동 이동
+      // 성공
       window.location.href = res.url || callbackUrl;
     } finally {
       setLoading(false);
