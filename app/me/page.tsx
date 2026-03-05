@@ -11,7 +11,7 @@ export default async function MePage() {
 
   return (
     <main style={{padding:40}}>
-      <h1>내 계정</h1>
+      <h1>마이페이지</h1>
 
       <p>이메일: {session.user?.email}</p>
       <p>이름: {session.user?.name}</p>
