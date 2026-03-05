@@ -5,9 +5,11 @@ import { signOut } from "next-auth/react";
 export default function LogoutBtn() {
   return (
     <button
-      type="button"
+      className="mp-actionBtn"
       onClick={() => signOut({ callbackUrl: "/" })}
-      style={{ padding: 10, border: "1px solid #ccc" }}
+      type="button"
+      aria-label="logout"
+      style={{ padding: "10px 14px" }}
     >
       로그아웃
     </button>
