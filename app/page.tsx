@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import LogoutBtn from "@/components/LogoutBtn";
 
 export default async function Home() {
 
@@ -11,7 +12,11 @@ export default async function Home() {
       {session ? (
         <>
           <p>로그인됨: {session.user?.email}</p>
+
           <a href="/me">내정보</a>
+          <br/><br/>
+
+          <LogoutBtn />
         </>
       ) : (
         <>
