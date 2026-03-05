@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { loginLimiter } from "@/lib/ratelimit";
+
 
 function getClientIp(req: any) {
   // ✅ Vercel/NextAuth 환경에서 최대한 안전하게 IP 추출
