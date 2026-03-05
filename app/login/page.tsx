@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -36,9 +36,8 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ 성공 시 callbackUrl로 이동
       router.push(res.url ?? callbackUrl);
-    } catch (err) {
+    } catch {
       setError("예기치 못한 오류가 발생했어요. 잠시 후 다시 시도해주세요.");
       setLoading(false);
     }
@@ -88,17 +87,42 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <div className="toast" style={{ borderColor: "rgba(255,92,122,.35)" }}>{error}</div>}
+          {error && (
+            <div className="toast" style={{ borderColor: "rgba(255,92,122,.35)" }}>
+              {error}
+            </div>
+          )}
 
           <button className="btn" type="submit" disabled={loading}>
             {loading ? "로그인 중..." : "로그인"}
           </button>
 
           <div className="toast">
-            계정이 없나요? <Link href="/register"><b>회원가입</b></Link>
+            계정이 없나요?{" "}
+            <Link href="/register">
+              <b>회원가입</b>
+            </Link>
           </div>
         </form>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  // ✅ useSearchParams()는 Suspense 아래에서만 안전
+  return (
+    <Suspense
+      fallback={
+        <main className="card">
+          <div className="card__inner">
+            <h1 className="h1">로그인</h1>
+            <p className="p">로딩 중...</p>
+          </div>
+        </main>
+      }
+    >
+      <LoginInner />
+    </Suspense>
   );
 }
