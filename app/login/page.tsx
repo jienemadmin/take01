@@ -18,20 +18,30 @@ function LoginInner() {
     setLoading(true);
 
     try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
-      });
+     const res = await signIn("credentials", {
+  email,
+  password,
+  redirect: false,
+  callbackUrl,
+});
 
-      if (!res || res.error) {
-        setErr("로그인 실패: 이메일/비밀번호를 확인하세요.");
-        return;
-      }
+if (!res) {
+  setErr("로그인 실패: 잠시 후 다시 시도해주세요.");
+  return;
+}
 
-      // redirect: false라서 수동 이동
-      window.location.href = res.url || callbackUrl;
+// ✅ 핵심: 429면 제한
+if (res.status === 429) {
+  setErr("로그인 시도 횟수를 초과했습니다. 15분 후 다시 시도해주세요.");
+  return;
+}
+
+if (res.error) {
+  setErr("로그인 실패: 이메일/비밀번호를 확인하세요.");
+  return;
+}
+
+window.location.href = res.url || callbackUrl;
     } finally {
       setLoading(false);
     }
