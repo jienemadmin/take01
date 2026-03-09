@@ -3,7 +3,10 @@ import { Redis } from "@upstash/redis";
 
 export const redis = Redis.fromEnv();
 
-// 회원가입은 기존 ratelimit 유지
+/* =========================
+   회원가입: IP 기준 전체 시도 제한
+   성공/실패 상관없이 자원 소모라서 전체 시도를 제한하는 게 정석
+   ========================= */
 export const registerLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(5, "30 m"),
@@ -11,25 +14,25 @@ export const registerLimiter = new Ratelimit({
   prefix: "rl:register",
 });
 
-// 로그인 실패 횟수 전용 키
+/* =========================
+   로그인: 실패 횟수만 카운트
+   성공 시 초기화
+   ========================= */
 function loginFailKey(ip: string, email: string) {
   return `rl:login:fail:${ip}:${email.toLowerCase()}`;
 }
 
-// 현재 실패 횟수 조회
 export async function getLoginFailCount(ip: string, email: string) {
   const key = loginFailKey(ip, email);
   const count = await redis.get<number>(key);
   return Number(count ?? 0);
 }
 
-// 로그인 실패 1회 증가 + TTL 15분 설정
 export async function increaseLoginFailCount(ip: string, email: string) {
   const key = loginFailKey(ip, email);
 
   const count = await redis.incr(key);
 
-  // 첫 실패일 때만 만료시간 설정
   if (count === 1) {
     await redis.expire(key, 60 * 15);
   }
@@ -42,7 +45,6 @@ export async function increaseLoginFailCount(ip: string, email: string) {
   };
 }
 
-// 로그인 성공 시 실패 카운트 초기화
 export async function clearLoginFailCount(ip: string, email: string) {
   const key = loginFailKey(ip, email);
   await redis.del(key);
