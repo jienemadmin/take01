@@ -78,3 +78,13 @@ model BannerEvent {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
+
+model SecurityLog {
+  id        String   @id @default(cuid())
+  type      String
+  email     String?
+  ip        String?
+  userId    String?
+  detail    String?
+  createdAt DateTime @default(now())
+}
