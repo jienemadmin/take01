@@ -17,20 +17,40 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
 
-      async authorize(credentials) {
-        const email = credentials?.email?.trim();
-        const password = credentials?.password;
+      async authorize(credentials, req) {
+  const email = credentials?.email?.trim();
+  const password = credentials?.password;
 
-        if (!email || !password) return null;
+  if (!email || !password) return null;
 
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return null;
 
-        const ok = await bcrypt.compare(password, user.passwordHash);
-        if (!ok) return null;
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return null;
 
-        return { id: user.id, email: user.email, name: user.name ?? null };
-      },
+  const xf =
+    req?.headers?.get?.("x-forwarded-for") ||
+    req?.headers?.["x-forwarded-for"] ||
+    req?.headers?.get?.("x-real-ip");
+
+  const ip = xf ? String(xf).split(",")[0].trim() : null;
+
+  await prisma.securityLog.create({
+    data: {
+      type: "LOGIN_SUCCESS",
+      email: user.email,
+      ip,
+      userId: user.id,
+    },
+  });
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name ?? null,
+  };
+},
     }),
   ],
 
