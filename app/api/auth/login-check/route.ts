@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { loginUiLimiter } from "@/lib/ratelimit";
+import {
+  getLoginFailCount,
+  increaseLoginFailCount,
+  clearLoginFailCount,
+} from "@/lib/ratelimit";
 
 function getClientIp(req: Request) {
   const xf = req.headers.get("x-forwarded-for");
@@ -31,87 +35,70 @@ export async function POST(req: Request) {
   }
 
   const ip = getClientIp(req);
-  const key = `${ip}:${email}`;
 
-  const r = await loginUiLimiter.limit(key);
+  // 1) 현재 실패 횟수 먼저 확인
+  const failCount = await getLoginFailCount(ip, email);
 
-  console.log("LOGIN_CHECK_RL", {
-    ip,
-    email,
-    key,
-    success: r.success,
-    remaining: r.remaining,
-    reset: r.reset,
-  });
-
-if (!r.success) {
-  const retryAfter = Math.max(
-    1,
-    Math.ceil((r.reset - Date.now()) / 1000)
-  );
-
-  await prisma.securityLog.create({
-    data: {
-      type: "LOGIN_RATE_LIMIT",
-      email,
-      ip,
-      detail: `retryAfter=${retryAfter}`,
-    },
-  });
-
-  return NextResponse.json(
-    {
-      error: "RATE_LIMIT",
-      message: "Too many login attempts",
-      retryAfter,
-    },
-    {
-      status: 429,
-      headers: {
-        "Retry-After": String(retryAfter),
+  if (failCount >= 10) {
+    return NextResponse.json(
+      {
+        error: "RATE_LIMIT",
+        message: "Too many failed login attempts",
+        retryAfter: 900, // 대략 15분
       },
-    }
-  );
-}
+      {
+        status: 429,
+      }
+    );
+  }
 
   const user = await prisma.user.findUnique({
     where: { email },
   });
 
-  // 보안상 이메일 존재 여부는 숨기고 같은 에러 처리
-if (!user) {
-  await prisma.securityLog.create({
-    data: {
-      type: "LOGIN_FAIL",
-      email,
-      ip,
-      detail: "user_not_found",
-    },
-  });
+  // 2) 계정 없음 → 실패 카운트 증가
+  if (!user) {
+    const result = await increaseLoginFailCount(ip, email);
 
-  return NextResponse.json(
-    { error: "INVALID_CREDENTIALS" },
-    { status: 401 }
-  );
-}
+    await prisma.securityLog.create({
+      data: {
+        type: "LOGIN_FAIL",
+        email,
+        ip,
+        detail: "user_not_found",
+      },
+    });
+
+    return NextResponse.json(
+      { error: "INVALID_CREDENTIALS" },
+      { status: 401 }
+    );
+  }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
 
-if (!ok) {
-  await prisma.securityLog.create({
-    data: {
-      type: "LOGIN_FAIL",
-      email,
-      ip,
-      detail: "wrong_password",
-    },
-  });
+  // 3) 비밀번호 틀림 → 실패 카운트 증가
+  if (!ok) {
+    const result = await increaseLoginFailCount(ip, email);
 
-  return NextResponse.json(
-    { error: "INVALID_CREDENTIALS" },
-    { status: 401 }
-  );
-}
+    await prisma.securityLog.create({
+      data: {
+        type: "LOGIN_FAIL",
+        email,
+        ip,
+        detail: "wrong_password",
+      },
+    });
+
+    return NextResponse.json(
+      { error: "INVALID_CREDENTIALS" },
+      { status: 401 }
+    );
+  }
+
+  // 4) 성공 → 실패 카운트 초기화
+  await clearLoginFailCount(ip, email);
+
   return NextResponse.json(
     { ok: true },
     { status: 200 }
