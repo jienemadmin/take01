@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 
+type Gender = "M" | "F" | "Other";
+
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [gender, setGender] = useState<"M" | "F" | "Other">("Other");
+  const [gender, setGender] = useState<Gender>("Other");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
@@ -20,27 +23,54 @@ export default function RegisterPage() {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           email,
-          password,
           name,
           gender,
+          password,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        setErr(data?.error || `회원가입 실패 (${res.status})`);
+      // ✅ 429: 회원가입 시도 초과
+      if (res.status === 429) {
+        const retryAfter = data?.retryAfter;
+        setErr(
+          retryAfter
+            ? `회원가입 시도 횟수를 초과했어요. 약 ${retryAfter}초 후 다시 시도해주세요.`
+            : "회원가입 시도 횟수를 초과했어요. 잠시 후 다시 시도해주세요."
+        );
         return;
       }
 
-      setOkMsg("회원가입 완료! 이제 로그인 해주세요.");
+      // ✅ 409: 이미 존재하는 이메일
+      if (res.status === 409) {
+        setErr("이미 가입된 이메일이에요. 다른 이메일을 사용해주세요.");
+        return;
+      }
+
+      // ✅ 400: 입력값 문제
+      if (res.status === 400) {
+        setErr("입력값을 다시 확인해주세요.");
+        return;
+      }
+
+      // ✅ 기타 실패
+      if (!res.ok) {
+        setErr("회원가입 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      setOkMsg("회원가입이 완료됐어요. 이제 로그인 해주세요.");
+
       setEmail("");
       setName("");
-      setPassword("");
       setGender("Other");
+      setPassword("");
     } finally {
       setLoading(false);
     }
@@ -55,6 +85,7 @@ export default function RegisterPage() {
               <div className="mp-brand__title">MemberPass</div>
               <span className="mp-badge">Register</span>
             </div>
+
             <div className="mp-actions">
               <a className="mp-actionBtn" href="/">홈</a>
               <a className="mp-actionBtn" href="/login">로그인</a>
@@ -74,6 +105,7 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 type="email"
                 required
+                autoComplete="email"
               />
             </div>
 
@@ -86,6 +118,7 @@ export default function RegisterPage() {
                 placeholder="홍길동"
                 type="text"
                 required
+                autoComplete="name"
               />
             </div>
 
@@ -94,11 +127,11 @@ export default function RegisterPage() {
               <select
                 className="mp-select"
                 value={gender}
-                onChange={(e) => setGender(e.target.value as any)}
+                onChange={(e) => setGender(e.target.value as Gender)}
               >
                 <option value="Other">기타 / 선택안함</option>
-                <option value="M">남</option>
-                <option value="F">여</option>
+                <option value="M">남성</option>
+                <option value="F">여성</option>
               </select>
             </div>
 
@@ -108,15 +141,27 @@ export default function RegisterPage() {
                 className="mp-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="8자 이상 권장"
+                placeholder="6자 이상"
                 type="password"
-                minLength={6}
                 required
+                minLength={6}
+                autoComplete="new-password"
               />
             </div>
 
             {err && <div className="mp-alert">{err}</div>}
-            {okMsg && <div className="mp-alert" style={{ borderColor: "rgba(60,255,190,.35)", background: "rgba(60,255,190,.10)" }}>{okMsg}</div>}
+
+            {okMsg && (
+              <div
+                className="mp-alert"
+                style={{
+                  borderColor: "rgba(60,255,190,.35)",
+                  background: "rgba(60,255,190,.10)",
+                }}
+              >
+                {okMsg}
+              </div>
+            )}
 
             <button className="mp-primary" disabled={loading}>
               {loading ? "처리중..." : "회원가입"}
