@@ -12,8 +12,11 @@ export default async function HomePage() {
 
   const isLoggedIn = !!session?.user;
   const displayName = session?.user?.name || "Guest";
-  const displayEmail = session?.user?.email || "로그인 후 내 계정을 확인할 수 있어요";
-  const membershipStatus = isLoggedIn ? "멤버십 상태 확인 가능" : "로그인 후 내 멤버십 확인";
+  const displayEmail =
+    session?.user?.email || "로그인 후 내 계정 정보를 확인할 수 있어요";
+  const membershipStatus = isLoggedIn
+    ? "멤버십 상태 확인 가능"
+    : "로그인 후 내 멤버십 확인";
   const barcodeValue = isLoggedIn ? "MEMBER-••••-REAL" : "MEMBER-PREVIEW";
   const barcodeHint = isLoggedIn
     ? "내 바코드를 열어 실제 패스를 확인하세요."
@@ -23,33 +26,62 @@ export default async function HomePage() {
     {
       id: 1,
       title: "웰컴 멤버십 혜택",
-      desc: "회원가입 후 첫 멤버십 안내를 확인하세요.",
+      desc: "회원가입 후 첫 멤버십 안내와 기본 혜택을 확인하세요.",
       href: isLoggedIn ? "/me" : getLoginHref("/me"),
     },
     {
       id: 2,
-      title: "이번 주 추천 숙소",
-      desc: "가까운 지점과 혜택을 확인해보세요.",
-      href: "#lodgings",
+      title: "이번 주 운영 공지",
+      desc: "새로운 기능과 서비스 변경 사항을 빠르게 확인하세요.",
+      href: "#notices",
     },
     {
       id: 3,
-      title: "공지사항 업데이트",
-      desc: "서비스 변경사항과 새로운 이벤트를 확인하세요.",
-      href: "#notices",
+      title: "패스 사용 안내",
+      desc: "바코드 패스와 멤버십 사용 방식을 미리 둘러보세요.",
+      href: "#benefits",
     },
   ];
 
-  const lodgings = [
-    { id: 1, name: "강남 프리미엄 스테이", area: "서울 강남", tag: "도심형" },
-    { id: 2, name: "성수 라이프 하우스", area: "서울 성수", tag: "트렌디" },
-    { id: 3, name: "해운대 오션 레지던스", area: "부산 해운대", tag: "오션뷰" },
+  const benefits = [
+    {
+      id: 1,
+      title: "멤버십 패스 안내",
+      desc: "로그인 후 나만의 바코드 패스를 확인하고 멤버십 정보를 관리할 수 있어요.",
+    },
+    {
+      id: 2,
+      title: "공지 및 혜택 확인",
+      desc: "운영팀 공지, 웰컴 혜택, 신규 이벤트를 한 화면에서 빠르게 볼 수 있어요.",
+    },
+    {
+      id: 3,
+      title: "내 계정 관리",
+      desc: "프로필, 멤버십 상태, 활동 이력을 내정보 페이지에서 확인할 수 있어요.",
+    },
   ];
 
   const posts = [
-    { id: 1, title: "이번 달 멤버 전용 혜택 정리", meta: "운영팀 · 2시간 전" },
-    { id: 2, title: "가까운 지점에서 사용할 수 있는 서비스", meta: "운영팀 · 어제" },
-    { id: 3, title: "멤버십 패스 사용 가이드", meta: "운영팀 · 2일 전" },
+    {
+      id: 1,
+      title: "이번 달 멤버 전용 혜택 정리",
+      meta: "운영팀 · 2시간 전",
+    },
+    {
+      id: 2,
+      title: "멤버십 패스 사용 가이드",
+      meta: "운영팀 · 어제",
+    },
+    {
+      id: 3,
+      title: "최근 업데이트와 변경사항",
+      meta: "운영팀 · 2일 전",
+    },
+    {
+      id: 4,
+      title: "처음 가입한 사용자를 위한 안내",
+      meta: "운영팀 · 3일 전",
+    },
   ];
 
   return (
@@ -88,11 +120,12 @@ export default async function HomePage() {
             <h1 className="public-title">
               로그인 전에
               <br />
-              서비스 핵심 화면을 먼저 보여주세요
+              핵심 화면을 먼저 경험하세요
             </h1>
             <p className="public-desc">
-              프로필, 멤버십, 바코드 패스, 공지, 숙소, 최근 활동을 먼저 경험하게 하고
-              실제 액션에서만 로그인 또는 회원가입을 유도하는 구조입니다.
+              프로필, 멤버십, 바코드 패스, 공지, 최근 활동을 먼저 보여주고
+              실제 액션이 필요한 순간에만 로그인 또는 회원가입을 유도하는
+              공개형 홈 구조입니다.
             </p>
 
             <div className="public-hero__actions">
@@ -137,7 +170,9 @@ export default async function HomePage() {
           </div>
 
           <div className="public-profileCard">
-            <div className="public-avatar">{isLoggedIn ? displayName.slice(0, 1) : "G"}</div>
+            <div className="public-avatar">
+              {isLoggedIn ? displayName.slice(0, 1) : "G"}
+            </div>
 
             <div className="public-profileMeta">
               <div className="public-profileName">{displayName}</div>
@@ -172,7 +207,11 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className={`public-barcodeCard ${isLoggedIn ? "is-active" : "is-preview"}`}>
+          <div
+            className={`public-barcodeCard ${
+              isLoggedIn ? "is-active" : "is-preview"
+            }`}
+          >
             <div className="public-barcodeCard__top">
               <span>Membership Pass</span>
               <span>{isLoggedIn ? "LIVE" : "PREVIEW"}</span>
@@ -207,7 +246,11 @@ export default async function HomePage() {
 
         <div className="public-bannerGrid">
           {banners.map((banner) => (
-            <Link key={banner.id} href={banner.href} className="mp-card public-bannerCard">
+            <Link
+              key={banner.id}
+              href={banner.href}
+              className="mp-card public-bannerCard"
+            >
               <div className="public-bannerCard__title">{banner.title}</div>
               <p className="public-bannerCard__desc">{banner.desc}</p>
               <span className="public-bannerCard__cta">자세히 보기</span>
@@ -216,47 +259,34 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="lodgings" className="public-sectionGrid">
-        <article className="mp-card public-panel">
+      <section id="benefits" className="public-sectionGrid">
+        <article className="mp-card public-panel public-panel--full">
           <div className="public-sectionHead">
             <div>
               <div className="public-sectionLabel">SECTION 04</div>
-              <h2>지도 · 주변 지점</h2>
+              <h2>서비스 안내 · 멤버 혜택</h2>
             </div>
           </div>
 
-          <div className="public-mapMock">
-            <div className="public-mapMock__badge">Map Preview</div>
-            <div className="public-mapMock__pins">
-              <span />
-              <span />
-              <span />
-            </div>
-            <p>지금은 미리보기 구조만 표시합니다. 다음 단계에서 실제 지도 API를 붙이면 됩니다.</p>
-          </div>
-
-          <div className="public-lodgingList">
-            {lodgings.map((item) => (
-              <div key={item.id} className="public-lodgingItem">
-                <div>
-                  <div className="public-lodgingName">{item.name}</div>
-                  <div className="public-lodgingMeta">
-                    {item.area} · {item.tag}
-                  </div>
-                </div>
-
+          <div className="public-benefitGrid">
+            {benefits.map((item) => (
+              <div key={item.id} className="public-benefitCard">
+                <div className="public-benefitCard__title">{item.title}</div>
+                <p className="public-benefitCard__desc">{item.desc}</p>
                 <Link
-                  className="mp-actionBtn"
-                  href={isLoggedIn ? "/me" : getLoginHref("/login")}
+                  className="public-benefitCard__cta"
+                  href={isLoggedIn ? "/me" : getLoginHref("/register")}
                 >
-                  {isLoggedIn ? "저장" : "로그인 후 저장"}
+                  {isLoggedIn ? "내정보로 이동" : "회원가입하고 시작하기"}
                 </Link>
               </div>
             ))}
           </div>
         </article>
+      </section>
 
-        <article id="notices" className="mp-card public-panel">
+      <section id="notices" className="public-sectionGrid">
+        <article className="mp-card public-panel public-panel--full">
           <div className="public-sectionHead">
             <div>
               <div className="public-sectionLabel">SECTION 05</div>
@@ -267,18 +297,40 @@ export default async function HomePage() {
           <div className="public-postList">
             {posts.map((post) => (
               <div key={post.id} className="public-postItem">
-                <div className="public-postTitle">{post.title}</div>
-                <div className="public-postMeta">{post.meta}</div>
+                <div>
+                  <div className="public-postTitle">{post.title}</div>
+                  <div className="public-postMeta">{post.meta}</div>
+                </div>
+
+                <Link
+                  className="mp-actionBtn"
+                  href={isLoggedIn ? "/me" : getLoginHref("/login")}
+                >
+                  {isLoggedIn ? "열기" : "로그인 후 더보기"}
+                </Link>
               </div>
             ))}
           </div>
 
-          <Link
-            className="mp-footBtn"
-            href={isLoggedIn ? "/me" : getLoginHref("/register")}
-          >
-            {isLoggedIn ? "내 활동 더 보기" : "회원가입하고 내 활동 시작하기"}
-          </Link>
+          <div className="public-finalCta">
+            {isLoggedIn ? (
+              <>
+                <Link className="mp-primary public-primaryBtn" href="/me">
+                  내 계정으로 이동
+                </Link>
+                <p>로그인 상태예요. 내정보에서 멤버십과 계정 정보를 관리할 수 있어요.</p>
+              </>
+            ) : (
+              <>
+                <Link className="mp-primary public-primaryBtn" href="/register">
+                  회원가입하고 시작하기
+                </Link>
+                <p>
+                  먼저 둘러본 뒤, 필요할 때 로그인 또는 회원가입을 진행하면 됩니다.
+                </p>
+              </>
+            )}
+          </div>
         </article>
       </section>
     </div>
