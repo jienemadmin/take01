@@ -14,14 +14,20 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
 
   if (!body) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid payload" },
+      { status: 400 }
+    );
   }
 
   const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
 
   if (!email || !password) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid payload" },
+      { status: 400 }
+    );
   }
 
   const ip = getClientIp(req);
@@ -39,7 +45,10 @@ export async function POST(req: Request) {
   });
 
   if (!r.success) {
-    const retryAfter = Math.max(1, Math.ceil((r.reset - Date.now()) / 1000));
+    const retryAfter = Math.max(
+      1,
+      Math.ceil((r.reset - Date.now()) / 1000)
+    );
 
     return NextResponse.json(
       {
@@ -56,9 +65,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
-  // 보안상 이메일 존재 여부는 숨기고 같은 메시지로 처리
+  // 보안상 이메일 존재 여부는 숨기고 같은 에러 처리
   if (!user) {
     return NextResponse.json(
       { error: "INVALID_CREDENTIALS" },
@@ -75,5 +86,8 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true }, { status: 200 });
+  return NextResponse.json(
+    { ok: true },
+    { status: 200 }
+  );
 }
