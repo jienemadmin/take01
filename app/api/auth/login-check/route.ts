@@ -44,48 +44,74 @@ export async function POST(req: Request) {
     reset: r.reset,
   });
 
-  if (!r.success) {
-    const retryAfter = Math.max(
-      1,
-      Math.ceil((r.reset - Date.now()) / 1000)
-    );
+if (!r.success) {
+  const retryAfter = Math.max(
+    1,
+    Math.ceil((r.reset - Date.now()) / 1000)
+  );
 
-    return NextResponse.json(
-      {
-        error: "RATE_LIMIT",
-        message: "Too many login attempts",
-        retryAfter,
+  await prisma.securityLog.create({
+    data: {
+      type: "LOGIN_RATE_LIMIT",
+      email,
+      ip,
+      detail: `retryAfter=${retryAfter}`,
+    },
+  });
+
+  return NextResponse.json(
+    {
+      error: "RATE_LIMIT",
+      message: "Too many login attempts",
+      retryAfter,
+    },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(retryAfter),
       },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(retryAfter),
-        },
-      }
-    );
-  }
+    }
+  );
+}
 
   const user = await prisma.user.findUnique({
     where: { email },
   });
 
   // 보안상 이메일 존재 여부는 숨기고 같은 에러 처리
-  if (!user) {
-    return NextResponse.json(
-      { error: "INVALID_CREDENTIALS" },
-      { status: 401 }
-    );
-  }
+if (!user) {
+  await prisma.securityLog.create({
+    data: {
+      type: "LOGIN_FAIL",
+      email,
+      ip,
+      detail: "user_not_found",
+    },
+  });
+
+  return NextResponse.json(
+    { error: "INVALID_CREDENTIALS" },
+    { status: 401 }
+  );
+}
 
   const ok = await bcrypt.compare(password, user.passwordHash);
 
-  if (!ok) {
-    return NextResponse.json(
-      { error: "INVALID_CREDENTIALS" },
-      { status: 401 }
-    );
-  }
+if (!ok) {
+  await prisma.securityLog.create({
+    data: {
+      type: "LOGIN_FAIL",
+      email,
+      ip,
+      detail: "wrong_password",
+    },
+  });
 
+  return NextResponse.json(
+    { error: "INVALID_CREDENTIALS" },
+    { status: 401 }
+  );
+}
   return NextResponse.json(
     { ok: true },
     { status: 200 }
