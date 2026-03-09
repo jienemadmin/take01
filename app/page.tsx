@@ -25,8 +25,8 @@ export default async function Home() {
             </div>
           </div>
 
-          <h1 className="mp-h1">MemberPass MVP</h1>
-          <p className="mp-sub">회원가입 / 로그인 / 로그아웃 / 마이페이지 기반 MVP</p>
+          <h1 className="mp-h1">커넥팅 뭐시기</h1>
+          <p className="mp-sub">블라블라블라</p>
 
           {session ? (
             <>
